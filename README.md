@@ -30,19 +30,20 @@ We use the processed version of ShapeNet provided [PointFlow](https://github.com
 
 
 ## Train
-Pre-train the canonical mapping:
+To train the entire model from scratch, please follow these steps:
+1. Pre-train the canonical mapping:
 ```
 python main.py --base configs/base/airplane.yaml -t True --gpus 0,1,2,3 -n WHATEVER_NAME
 ```
-Pre-train the grouping:
+2. Pre-train the grouping:
 ```
 python main.py --base configs/stage1/128/airplane.yaml -t True --gpus 0,1,2,3 -n WHATEVER_NAME
 ```
-Train the VQVAE:
+3. Train the VQVAE:
 ```
 python main.py --base configs/stage2/128/airplane.yaml -t True --gpus 0,1,2,3 -n WHATEVER_NAME
 ```
-Train the Transformer:
+4. Train the Transformer:
 ```
 python main.py --base configs/stage3/128/airplane.yaml -t True --gpus 0,1,2,3 -n WHATEVER_NAME
 ```
