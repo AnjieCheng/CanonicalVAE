@@ -1,0 +1,40 @@
+model:
+  base_learning_rate: 5e-4
+  target: src.canonicalvq.models.CanonicalVQ
+  params:
+    feat_dim: 256
+    n_embed: 5000
+    num_groups: 128
+    codebook_size: 50
+    mode: 3 # Transformer
+    ckpt_path: /home/vslab2018/3d/CanonicalVAE/logs/airplane_2022-01-27T17-29-38_GroupedVQ_DS4/testtube/version_0/checkpoints/epoch=2959-step=88799.ckpt
+    train_unfold: False
+    no_fold: False
+
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 24
+    num_workers: 0
+    train:
+      target: src.data.core.ShapeNet15kPointClouds
+      params:
+        split: 'train'
+        categories: ['airplane']
+        tr_sample_size: 2048
+        te_sample_size: 2048
+    validation:
+      target: src.data.core.ShapeNet15kPointClouds
+      params:
+        split: 'val'
+        categories: ['airplane']
+        tr_sample_size: 2048
+        te_sample_size: 2048
+    test:
+      target: src.data.core.ShapeNet15kPointClouds
+      params:
+        split: 'val'
+        categories: ['airplane']
+        tr_sample_size: 2048
+        te_sample_size: 2048

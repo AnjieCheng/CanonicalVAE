@@ -1,0 +1,41 @@
+model:
+  base_learning_rate: 5e-4
+  target: src.canonicalvq.models.CanonicalVQ
+  params:
+    feat_dim: 256
+    n_embed: 5000
+    num_groups: 128
+    mode: 3 # Transformer
+    codebook_size: 50
+    ckpt_path: /work/vslab2018/backup/3d/CanonicalVAE/out/ckpt/AE_GEN_chair.ckpt
+    # ignore_keys: ['VQ']
+    train_unfold: False
+    no_fold: False
+
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 24
+    num_workers: 0
+    train:
+      target: src.data.core.ShapeNet15kPointClouds
+      params:
+        split: 'train'
+        categories: ['chair']
+        tr_sample_size: 2048
+        te_sample_size: 2048
+    validation:
+      target: src.data.core.ShapeNet15kPointClouds
+      params:
+        split: 'val'
+        categories: ['chair']
+        tr_sample_size: 2048
+        te_sample_size: 2048
+    test:
+      target: src.data.core.ShapeNet15kPointClouds
+      params:
+        split: 'val'
+        categories: ['chair']
+        tr_sample_size: 2048
+        te_sample_size: 2048

@@ -1,0 +1,43 @@
+model:
+  base_learning_rate: 5e-4
+  target: src.canonicalvq.models.CanonicalVQ
+  params:
+    feat_dim: 256
+    n_embed: 5000
+    num_groups: 128
+    codebook_size: 50
+    mode: 2 # FT
+    # ckpt_path: /home/vslab2018/3d/CanonicalVAE/logs/chair_2022-01-12T08-07-44_chair_ft_no_unfold/testtube/version_0/checkpoints/epoch=39-step=2919.ckpt
+    ckpt_path: /home/vslab2018/3d/CanonicalVAE/logs/chair_2022-02-06T14-45-52_stage3_cb50_decayLR/testtube/version_0/checkpoints/epoch=3999-step=195999.ckpt
+    # ckpt_path: /home/vslab2018/3d/CanonicalVAE/logs/chair_2022-01-22T08-50-58_delete_resVQ_kmeans_encoder_f/testtube/version_0/checkpoints/epoch=399-step=29199.ckpt
+    train_unfold: False
+    no_fold: False
+    # ckpt_path: /home/vslab2018/3d/CanonicalVAE/logs/chair_2022-01-16T13-14-51_chair_ft_VQ_5000/testtube/version_0/checkpoints/epoch=1219-step=89059.ckpt
+
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 24
+    num_workers: 0
+    train:
+      target: src.data.core.ShapeNet15kPointClouds
+      params:
+        split: 'train'
+        categories: ['chair']
+        tr_sample_size: 2048
+        te_sample_size: 2048
+    validation:
+      target: src.data.core.ShapeNet15kPointClouds
+      params:
+        split: 'val'
+        categories: ['chair']
+        tr_sample_size: 2048
+        te_sample_size: 2048
+    test:
+      target: src.data.core.ShapeNet15kPointClouds
+      params:
+        split: 'val'
+        categories: ['chair']
+        tr_sample_size: 2048
+        te_sample_size: 2048
