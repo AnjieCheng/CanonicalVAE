@@ -1,7 +1,6 @@
-# CanonicalVAE
-[[arxiv]](https://arxiv.org/abs/2204.01955)
+# Autoregressive 3D Shape Generation via Canonical Mapping
+[[arxiv]](https://arxiv.org/abs/2204.01955) [[website]](https://arxiv.org/abs/2204.01955)
 
-This repository is the implementation of "Autoregressive 3D Shape Generation via Canonical Mapping".
 
 <p float="middle">
 <img src="assets/title.png" width="100%" />
@@ -19,7 +18,6 @@ This repository is the implementation of "Autoregressive 3D Shape Generation via
   <img src="assets/animation/plane/HQ_16.gif" width="24.5%" /> 
   <img src="assets/animation/plane/HQ_18.gif" width="24.5%" />
   <img src="assets/animation/plane/HQ_37.gif" width="24.5%" /> -->
-</p> -->
 
 Code release progress:
 - [x] Training/inference code
