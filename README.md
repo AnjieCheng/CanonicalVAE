@@ -25,11 +25,11 @@ python setup.py install
 ```
 The installed `build` folder should be under `external/emd`.
 
-# Dataset
+## Dataset
 We use the processed version of ShapeNet provided by authors of PointFlow. Please download the dataset from this [link](https://drive.google.com/drive/folders/1G0rf-6HSHoTll6aH7voh-dXj6hCRhSAQ?usp=sharing).
 
 
-# Train
+## Train
 Pre-train the canonical mapping:
 ```
 python main.py --base configs/base/airplane.yaml -t True --gpus 0,1,2,3 -n airplan_base
@@ -49,7 +49,7 @@ python main.py --base configs/stage3/128/airplane.yaml -t True --gpus 0,1,2,3 -n
 For each stage, please change the `ckpt_path` in the config file to the path of the checkpoints from last stage.
 If you would like to start training from a certain stage, you can use the pre-trained checkpoints from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing) and use the `ignore_keys` in the config file to determine which module(s) should be trained from scratch.
 
-# Evaluation
+## Evaluation
 The pre-trained checkpoints and generated samples can be downloaded from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing). Please change the `ckpt_path` in `configs/stage3/128/*CATEGORY*_test.yaml` to either your trained checkpoints or or pre-trained checkpoints. Currently, the evaluation code only supports single GPU. If you use multiple GPUs, the code would still be runnable, but the calculated metrics may be incorrect.
 
 ```
@@ -73,5 +73,5 @@ in your publications if this repo helps your research:
 }
 ```
 
-# Acknowledgement
+## Acknowledgement
 This repo is built on top of [VQ-GAN](https://github.com/CompVis/taming-transformers). We thank the authors for sharing the codebase!
