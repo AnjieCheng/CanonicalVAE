@@ -26,7 +26,7 @@ python setup.py install
 The installed `build` folder should be under `external/emd`.
 
 ## Dataset
-We use the processed version of ShapeNet provided by authors of PointFlow. Please download the dataset from this [link](https://drive.google.com/drive/folders/1G0rf-6HSHoTll6aH7voh-dXj6hCRhSAQ?usp=sharing).
+We use the processed version of ShapeNet provided [PointFlow](https://github.com/stevenygd/PointFlow). Please download the dataset [here](https://drive.google.com/drive/folders/1G0rf-6HSHoTll6aH7voh-dXj6hCRhSAQ?usp=sharing).
 
 
 ## Train
