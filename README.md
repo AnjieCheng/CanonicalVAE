@@ -19,7 +19,7 @@
   <img src="assets/animation/plane/HQ_18.gif" width="24.5%" />
   <img src="assets/animation/plane/HQ_37.gif" width="24.5%" /> -->
 
-Code release progress:
+Code release WIP:
 - [x] Training/inference code
 - [ ] Installation and running instructions
 - [x] Pre-trained checkpoints & generated samples
