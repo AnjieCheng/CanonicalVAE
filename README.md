@@ -2,12 +2,20 @@
 [[arxiv]](https://arxiv.org/abs/2204.01955)
 
 <p float="middle">
-  <img src="assets/animation/car/HQ_9.gif" width="24%" />
-  <img src="assets/animation/car/HQ_15.gif" width="24%" /> 
-  <img src="assets/animation/car/HQ_46.gif" width="24%" />
-  <img src="assets/animation/car/HQ_38.gif" width="24%" />
+  <img src="assets/animation/car/HQ_9.gif" width="24.7%" />
+  <img src="assets/animation/car/HQ_15.gif" width="24.7%" /> 
+  <img src="assets/animation/car/HQ_46.gif" width="24.7%" />
+  <img src="assets/animation/car/HQ_38.gif" width="24.7%" />
+  <img src="assets/animation/chair/HQ_26.gif" width="24.7%" />
+  <img src="assets/animation/chair/HQ_27.gif" width="24.7%" /> 
+  <img src="assets/animation/chair/HQ_40.gif" width="24.7%" />
+  <img src="assets/animation/chair/HQ_43.gif" width="24.7%" />
+  <img src="assets/animation/plane/HQ_13.gif" width="24.7%" />
+  <img src="assets/animation/plane/HQ_16.gif" width="24.7%" /> 
+  <img src="assets/animation/plane/HQ_18.gif" width="24.7%" />
+  <img src="assets/animation/plane/HQ_37.gif" width="24.7%" />
 </p>
-<p float="middle">
+<!-- <p float="middle">
   <img src="assets/animation/chair/HQ_26.gif" width="24%" />
   <img src="assets/animation/chair/HQ_27.gif" width="24%" /> 
   <img src="assets/animation/chair/HQ_40.gif" width="24%" />
@@ -18,7 +26,7 @@
   <img src="assets/animation/plane/HQ_16.gif" width="24%" /> 
   <img src="assets/animation/plane/HQ_18.gif" width="24%" />
   <img src="assets/animation/plane/HQ_37.gif" width="24%" />
-</p>
+</p> -->
 
 
 This repository is the implementation of "Autoregressive 3D Shape Generation via Canonical Mapping".
