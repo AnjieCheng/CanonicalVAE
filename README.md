@@ -11,6 +11,7 @@ Code release progress:
 - [ ] Cleanup
 
 ## Requirements
+The code is developed and tested on Ubuntu 18.04, with python==3.8, CUDA==10.2.89, pytorch==1.10.0, pytorch_lightning==1.5.2.
 
 By default, the Chamfer Loss module should work properly. If you failed to run the chamfer loss module, please see the following link and follow their instruction.
 ```setup
@@ -25,14 +26,35 @@ python setup.py install
 The installed `build` folder should be under `external/emd`.
 
 # Dataset
-For ShapeNet, we use the processed version provided by authors of PointFlow. Please download the dataset from this [link](https://drive.google.com/drive/folders/1G0rf-6HSHoTll6aH7voh-dXj6hCRhSAQ?usp=sharing).
+We use the processed version of ShapeNet provided by authors of PointFlow. Please download the dataset from this [link](https://drive.google.com/drive/folders/1G0rf-6HSHoTll6aH7voh-dXj6hCRhSAQ?usp=sharing).
 
+
+# Train
+Pre-train the canonical mapping:
+```
+python main.py --base configs/base/airplane.yaml -t True --gpus 0,1,2,3 -n airplan_base
+```
+Pre-train the grouping:
+```
+python main.py --base configs/stage1/128/airplane.yaml -t True --gpus 0,1,2,3 -n airplan_stage1
+```
+Train the VQVAE:
+```
+python main.py --base configs/stage2/128/airplane.yaml -t True --gpus 0,1,2,3 -n airplan_stage2
+```
+Train the Transformer:
+```
+python main.py --base configs/stage3/128/airplane.yaml -t True --gpus 0,1,2,3 -n airplan_stage3
+```
+For each stage, please change the `ckpt_path` in the config file to the path of the checkpoints from last stage.
 
 # Evaluation
-The pre-trained checkpoints and generated samples can be downloaded from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing). Please modify the `ckpt_path` in `configs/stage3/128/airplane_test.yaml`, `configs/stage3/128/car_test.yaml`, `configs/stage3/128/chair_test.yaml` to either your trained checkpoints or or pre-trained checkpoints. Note that the evaluation code only supports single GPU. If you use multiple GPUs, the code would still be runnable, but the calculated metrics may be incorrect.
+The pre-trained checkpoints and generated samples can be downloaded from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing). Please change the `ckpt_path` in `configs/stage3/128/*CATEGORY*_test.yaml` to either your trained checkpoints or or pre-trained checkpoints. Currently, the evaluation code only supports single GPU. If you use multiple GPUs, the code would still be runnable, but the calculated metrics may be incorrect.
 
 ```
+python main.py --base configs/stage3/128/airplane_test.yaml -t False --gpus 0, -n airplan_test
 python main.py --base configs/stage3/128/car_test.yaml -t False --gpus 0, -n car_test
+python main.py --base configs/stage3/128/chair_test.yaml -t False --gpus 0, -n chair_test
 ```
 The script will evaluate both auto-encoding performance and generation performance.
 
