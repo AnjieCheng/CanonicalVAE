@@ -1,6 +1,26 @@
 # CanonicalVAE
 [[arxiv]](https://arxiv.org/abs/2204.01955)
 
+<p float="middle">
+  <img src="assets/animation/car/HQ_9.gif" width="24%" />
+  <img src="assets/animation/car/HQ_15.gif" width="24%" /> 
+  <img src="assets/animation/car/HQ_46.gif" width="24%" />
+  <img src="assets/animation/car/HQ_38.gif" width="24%" />
+</p>
+<p float="middle">
+  <img src="assets/animation/chair/HQ_26.gif" width="24%" />
+  <img src="assets/animation/chair/HQ_27.gif" width="24%" /> 
+  <img src="assets/animation/chair/HQ_40.gif" width="24%" />
+  <img src="assets/animation/chair/HQ_43.gif" width="24%" />
+</p>
+<p float="middle">
+  <img src="assets/animation/plane/HQ_13.gif" width="24%" />
+  <img src="assets/animation/plane/HQ_16.gif" width="24%" /> 
+  <img src="assets/animation/plane/HQ_18.gif" width="24%" />
+  <img src="assets/animation/plane/HQ_37.gif" width="24%" />
+</p>
+
+
 This repository is the implementation of "Autoregressive 3D Shape Generation via Canonical Mapping".
 
 Code release progress:
@@ -49,7 +69,7 @@ python main.py --base configs/stage3/128/airplane.yaml -t True --gpus 0,1,2,3 -n
 ```
 The checkpoint will be stored in the `log` directory, together with the tensorboard logger file and the generated samples. For each stage, please change the `ckpt_path` in the config file to the path of the checkpoints from last stage.
 
-If you would like to start training from a certain stage, you can use the pre-trained checkpoints from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing) and use the `ignore_keys` in the config file to determine which module(s) should be trained from scratch.
+If you would like to start training from a certain stage, you can use the pre-trained checkpoints from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing) and use the `ignore_keys` in the config file to determine which module(s) to be trained from scratch.
 
 ## Evaluation
 The pre-trained checkpoints and generated samples can be downloaded from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing). Please change the `ckpt_path` in `configs/stage3/128/*CATEGORY*_test.yaml` to either your trained checkpoints or or pre-trained checkpoints. Currently, the evaluation code only supports single GPU. If you use multiple GPUs, the code would still be runnable, but the calculated metrics may be incorrect.
