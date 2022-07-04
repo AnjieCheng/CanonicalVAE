@@ -32,21 +32,22 @@ We use the processed version of ShapeNet provided by authors of PointFlow. Pleas
 ## Train
 Pre-train the canonical mapping:
 ```
-python main.py --base configs/base/airplane.yaml -t True --gpus 0,1,2,3 -n airplan_base
+python main.py --base configs/base/airplane.yaml -t True --gpus 0,1,2,3 -n WHATEVER_NAME
 ```
 Pre-train the grouping:
 ```
-python main.py --base configs/stage1/128/airplane.yaml -t True --gpus 0,1,2,3 -n airplan_stage1
+python main.py --base configs/stage1/128/airplane.yaml -t True --gpus 0,1,2,3 -n WHATEVER_NAME
 ```
 Train the VQVAE:
 ```
-python main.py --base configs/stage2/128/airplane.yaml -t True --gpus 0,1,2,3 -n airplan_stage2
+python main.py --base configs/stage2/128/airplane.yaml -t True --gpus 0,1,2,3 -n WHATEVER_NAME
 ```
 Train the Transformer:
 ```
-python main.py --base configs/stage3/128/airplane.yaml -t True --gpus 0,1,2,3 -n airplan_stage3
+python main.py --base configs/stage3/128/airplane.yaml -t True --gpus 0,1,2,3 -n WHATEVER_NAME
 ```
-For each stage, please change the `ckpt_path` in the config file to the path of the checkpoints from last stage.
+The checkpoint will be stored in the `log` directory, together with the tensorboard logger file and the generated samples. For each stage, please change the `ckpt_path` in the config file to the path of the checkpoints from last stage.
+
 If you would like to start training from a certain stage, you can use the pre-trained checkpoints from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing) and use the `ignore_keys` in the config file to determine which module(s) should be trained from scratch.
 
 ## Evaluation
