@@ -47,6 +47,7 @@ Train the Transformer:
 python main.py --base configs/stage3/128/airplane.yaml -t True --gpus 0,1,2,3 -n airplan_stage3
 ```
 For each stage, please change the `ckpt_path` in the config file to the path of the checkpoints from last stage.
+If you would like to start training from a certain stage, you can use the pre-trained checkpoints from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing) and use the `ignore_keys` in the config file to determine which module(s) should be trained from scratch.
 
 # Evaluation
 The pre-trained checkpoints and generated samples can be downloaded from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing). Please change the `ckpt_path` in `configs/stage3/128/*CATEGORY*_test.yaml` to either your trained checkpoints or or pre-trained checkpoints. Currently, the evaluation code only supports single GPU. If you use multiple GPUs, the code would still be runnable, but the calculated metrics may be incorrect.
@@ -59,6 +60,18 @@ python main.py --base configs/stage3/128/chair_test.yaml -t False --gpus 0, -n c
 The script will evaluate both auto-encoding performance and generation performance.
 
 You can also directly evaluate the performance with our generated samples. Please download the samples from this [link](https://drive.google.com/drive/folders/1NpSo8bBLR-vwOS5BK6pa6WRTnF1feuVl?usp=sharing), and refer to `benchmark.ipynb` for details.
+
+## Reference
+Please cite our paper ([link](https://arxiv.org/abs/2204.01955)) 
+in your publications if this repo helps your research:
+```
+@inproceedings{cheng2022autoregressive,
+    title     = {Autoregressive 3D Shape Generation via Canonical Mapping},
+    author    = {Cheng, An-Chieh and Li, Xueting and Liu, Sifei and Sun, Min and Yang, Ming-Hsuan},
+    booktitle = {ECCV},
+    year      = {2022}
+}
+```
 
 # Acknowledgement
 This repo is built on top of [VQ-GAN](https://github.com/CompVis/taming-transformers). We thank the authors for sharing the codebase!
