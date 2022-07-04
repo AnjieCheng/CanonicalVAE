@@ -1,5 +1,6 @@
 # CanonicalVAE
 [[arxiv]](https://arxiv.org/abs/2204.01955)
+
 This repository is the implementation of "Autoregressive 3D Shape Generation via Canonical Mapping".
 
 Code release progress:
