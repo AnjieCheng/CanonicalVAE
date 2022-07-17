@@ -11,8 +11,6 @@ from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, Callback, LearningRateMonitor
 from pytorch_lightning.utilities.distributed import rank_zero_only
 
-# from taming.data.utils import custom_collate
-
 
 def get_obj_from_str(string, reload=False):
     module, cls = string.rsplit(".", 1)
@@ -205,15 +203,6 @@ class SetupCallback(Callback):
 
         else:
             pass
-            # ModelCheckpoint callback created log directory --- remove it
-            # if not self.resume and os.path.exists(self.logdir):
-            #     dst, name = os.path.split(self.logdir)
-            #     dst = os.path.join(dst, "child_runs", name)
-            #     os.makedirs(os.path.split(dst)[0], exist_ok=True)
-            #     try:
-            #         os.rename(self.logdir, dst)
-            #     except FileNotFoundError:
-            #         pass
 
 
 class ImageLogger(Callback):
@@ -320,10 +309,6 @@ class ImageLogger(Callback):
 
 if __name__ == "__main__":
     now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
-
-    # add cwd for convenience and to make classes in this file available when
-    # running as `python main.py`
-    # (in particular `main.DataModuleFromConfig`)
     sys.path.append(os.getcwd())
 
     parser = get_parser()
@@ -413,11 +398,6 @@ if __name__ == "__main__":
         # trainer and callbacks
         trainer_kwargs = dict()
 
-        # default logger configs
-        # NOTE wandb < 0.10.0 interferes with shutdown
-        # wandb >= 0.10.0 seems to fix it but still interferes with pudb
-        # debugging (wrongly sized pudb ui)
-        # thus prefer testtube for now
         default_logger_cfgs = {
             "wandb": {
                 "target": "pytorch_lightning.loggers.WandbLogger",
@@ -441,8 +421,6 @@ if __name__ == "__main__":
         logger_cfg = OmegaConf.merge(default_logger_cfg, logger_cfg)
         trainer_kwargs["logger"] = instantiate_from_config(logger_cfg)
 
-        # modelcheckpoint - use TrainResult/EvalResult(checkpoint_on=metric) to
-        # specify which metric is used to determine best models
         default_modelckpt_cfg = {
             "target": "pytorch_lightning.callbacks.ModelCheckpoint",
             "params": {
@@ -517,10 +495,7 @@ if __name__ == "__main__":
         lightning_config.trainer.accumulate_grad_batches = accumulate_grad_batches
         lightning_config.trainer.max_epochs = 4000
         
-        model.learning_rate = accumulate_grad_batches * ngpu * bs * base_lr
         model.learning_rate = 5e-4
-        # print("Setting learning rate to {:.2e} = {} (accumulate_grad_batches) * {} (num_gpus) * {} (batchsize) * {:.2e} (base_lr)".format(
-        #     model.learning_rate, accumulate_grad_batches, ngpu, bs, base_lr))
 
         # allow checkpointing via USR1
         def melk(*args, **kwargs):
@@ -562,7 +537,3 @@ if __name__ == "__main__":
             dst = os.path.join(dst, "debug_runs", name)
             os.makedirs(os.path.split(dst)[0], exist_ok=True)
             os.rename(logdir, dst)
-
-
-# PL_TORCH_DISTRIBUTED_BACKEND=gloo python main.py --base configs/base.yaml -t True --gpus 0,1
-# PL_TORCH_DISTRIBUTED_BACKEND=gloo python main.py --base configs/base.yaml -t True --gpus 0,1, --num_sanity_val_steps 0

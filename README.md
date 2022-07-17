@@ -43,6 +43,7 @@ The installed `build` folder should be under `external/emd`.
 
 ## Dataset
 We use the processed version of ShapeNet provided [PointFlow](https://github.com/stevenygd/PointFlow). Please download the dataset [here](https://drive.google.com/drive/folders/1G0rf-6HSHoTll6aH7voh-dXj6hCRhSAQ?usp=sharing).
+Don't forget to change the `root` path in `src/data/core.py` to your dataset location.
 
 
 ## Train

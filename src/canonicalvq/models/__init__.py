@@ -23,8 +23,6 @@ __all__ = [
     encoder, decoder, transformer,
 ]
 
-# not supposely to be used
-# Decoder dictionary
 decoder_dict = {
     'ImplicitFun': decoder.ImplicitFun,
     'FixPointGenerator': decoder.FixPointGenerator,
@@ -85,7 +83,6 @@ class CanonicalVQ(pl.LightningModule):
         self.Fold = decoder.SPGANGenerator(z_dim=feat_dim, add_dim=3, use_local=True, use_tanh=False) # local
 
         self.Encoder_f = encoder.DGCNN(feat_dim=feat_dim)
-        # self.Unfold = decoder.SPGANGenerator(z_dim=feat_dim, add_dim=3, use_local=True)
         self.Fold_f = decoder.SPGANGenerator(z_dim=feat_dim, add_dim=3, use_local=True, use_tanh=False) # local
         self.PG = decoder.PrimitiveGrouping(num_groups=num_groups, learnable=learnable, abl=abl)
         self.codebook_size = codebook_size
@@ -96,29 +93,13 @@ class CanonicalVQ(pl.LightningModule):
         self.ae_loss = CanonicalVQLoss()
         self.correspondence_loss = CorrespondenceLoss()
 
-        # self.quant_conv = torch.nn.Conv1d(feat_dim, feat_dim_local, 1)
-        # self.post_quant_conv = torch.nn.Conv1d(feat_dim_local, feat_dim, 1)
-
         if self.mode == 3:
-            # if self.condition == 'mask':
-            #     import torchvision.models as models
-            #     # init a pretrained resnet
-            #     backbone = models.resnet50(pretrained=True)
-            #     num_filters = backbone.fc.in_features
-            #     layers = list(backbone.children())[:-1]
-            #     self.cond_feature_extractor = nn.Sequential(*layers)
-            #     self.cond_feature_projection = nn.Linear(num_filters, 256)
-            #     cond_feature_dim = 256
-            # else:
             cond_feature_dim = 0
 
             self.Encoder.eval()
             self.Fold.eval()
-            # self.Unfold.eval()
             self.PG.eval()
             self.VQ.eval()
-            # self.quant_conv.eval()
-            # self.post_quant_conv.eval()
             
             self.Transformer = transformer.mingpt.GPT(vocab_size=codebook_size, 
                                                     block_size=num_groups,
@@ -127,16 +108,12 @@ class CanonicalVQ(pl.LightningModule):
                                                     n_embd=256, # 512
                                                     cond_feature_dim=cond_feature_dim) 
             self.be_unconditional = True
-            # self.cond_stage_key = self.first_stage_key
             self.sos_token = 0
             self.cond_model = SOSProvider(self.sos_token)
 
         if ckpt_path is not None:
             self.init_from_ckpt(ckpt_path, ignore_keys=ignore_keys)
-        # self.image_key = image_key
-        # if colorize_nlabels is not None:
-        #     assert type(colorize_nlabels)==int
-        #     self.register_buffer("colorize", torch.randn(3, colorize_nlabels, 1, 1))
+
         if monitor is not None:
             self.monitor = monitor
         self.visualizer = None
@@ -179,21 +156,12 @@ class CanonicalVQ(pl.LightningModule):
         # -------- PG -----------
         self.PG.regular_points = self.template.get_regular_points(level=self.level)
         _, _, _, grouped_features, scattered_features, _ = self.PG(batch_p_2d, global_rec_shape, l_latent_in_standard_order)
-        # scattered_features = corr_out['g_latent_stacked']
         # -------- VQ -----------
-
-        # scattered_features = self.quant_conv(scattered_features.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
-        # grouped_features = self.quant_conv(grouped_features.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
         grouped_quant, indices, _ = self.VQ(grouped_features) # grouped_quant, indices, emb_loss
-        # grouped_quant = self.post_quant_conv(grouped_quant.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
 
         quant = self.PG.remap_grouped_features(batch_p_2d, grouped_quant)
-        # quant = self.PG.remap_grouped_features(batch_p_2d, grouped_features)
-        # quant = self.post_quant_conv(quant.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
 
         # -------- Fold_f -----------
-        # quant = corr_out['g_latent_stacked']
-        # quant = scattered_features
         self_rec_shape_f = self.Fold_f(quant, batch_p_2d)
 
         # --------- [SANITY] Query VQ Codebook ---------
@@ -208,21 +176,12 @@ class CanonicalVQ(pl.LightningModule):
         # -------- PG -----------
         stpts_prob_map, stpts_xyz, stpts_groups, weighted_features, scattered_features, stpts_xyz_folded = self.PG(batch_p_2d_in_shape_order, shape, l_latent)
         _, _, _, grouped_features, scattered_features, _ = self.PG(batch_p_2d_in_shape_order, shape, l_latent)
-        # scattered_features = corr_out['g_latent_stacked']
         # -------- VQ -----------
-
-        # scattered_features = self.quant_conv(scattered_features.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
-        # grouped_features = self.quant_conv(grouped_features.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
         grouped_quant, _, _ = self.VQ(grouped_features)
         # grouped_quant = self.post_quant_conv(grouped_quant.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
         
         quant = self.PG.remap_grouped_features(batch_p_2d_in_shape_order, grouped_quant)
-        # quant = self.PG.remap_grouped_features(batch_p_2d, grouped_features)
-        # quant = self.post_quant_conv(quant.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
-
         # -------- Fold_f -----------
-        # quant = corr_out['g_latent_stacked']
-        # quant = scattered_features
         self_rec_shape_f_ = self.Fold_f(quant, batch_p_2d_in_shape_order)
 
         if denorm:
@@ -231,7 +190,6 @@ class CanonicalVQ(pl.LightningModule):
             self_rec_shape_f_ = denormalize(self_rec_shape_f_, shape_loc, shape_scale)
             global_rec_shape = denormalize(global_rec_shape, shape_loc, shape_scale)
             oracle_shape = denormalize(shape_tr, shape_loc, shape_scale)
-            # gen_shape = denormalize(gen_shape, shape_loc, shape_scale)
             sanity_rec_shape = denormalize(sanity_rec_pts, shape_loc, shape_scale)
             
         info = {
@@ -309,7 +267,6 @@ class CanonicalVQ(pl.LightningModule):
 
                     with torch.no_grad():
                         # --------- [Gen] Transformer Sample Sequence ---------
-                        
                         c_indices = repeat(torch.tensor([self.sos_token]), '1 -> b 1', b=batch_size*num_of_views).to(shape).long() # sos token
                         index_sample = sample_with_past(c_indices, self.Transformer, steps=key_length, temperature=2, top_k=50, top_p=0.92, embeddings=cond_feature)
 
@@ -381,7 +338,6 @@ class CanonicalVQ(pl.LightningModule):
             stpts_groups = self.PG.get_groups(batch_p_2d)
             propagated_features = self.PG.propagate_feat(batch_p_2d, quant_z) # [16, 2048, 256]
 
-            # post_quant_features = self.post_quant_conv(propagated_features.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
             gen_pts = self.Fold_f(propagated_features, batch_p_2d)
         
         rt = {
@@ -475,7 +431,6 @@ class CanonicalVQ(pl.LightningModule):
         return out
 
     def training_step(self, batch, batch_idx, optimizer_idx=0):
-        # rank = torch.distributed.get_rank()
         if self.temperature_scheduler != None:
             self.temperature_scheduling()
 
@@ -505,13 +460,6 @@ class CanonicalVQ(pl.LightningModule):
                 self.visualizer.show_pointclouds(points=corr_out['self_rec_shape_u'][0], title="train/global_reconstruct_u")
                 self.visualizer.show_pointclouds(points=corr_out['unfold_pts'][0], title="train/global_unfold")
                 self.visualizer.show_pointclouds(points=corr_out['batch_p_2d'][0], title="train/unfold_target")
-
-                # self.visualizer.show_pointclouds(points=self_rec_shape_f_[0], title="train/self_rec_shape_f_")
-                # self.visualizer.show_sphere_groups(points=stpts_xyz_folded[0], title="train/stpts_xyz_folded", groups=torch.tensor(np.arange(num_groups)), num_groups=num_groups)
-                # self.visualizer.show_sphere_groups(points=stpts_xyz[0], title="train/stpts_xyz", groups=torch.tensor(np.arange(num_groups)), num_groups=num_groups)
-                # self.visualizer.show_sphere_groups(points=shape[0], title="train/grouped_shape", groups=stpts_groups[0], num_groups=num_groups)
-                # self.visualizer.show_sphere_groups(points=unfold_pts[0], title="train/grouped_sphere", groups=stpts_groups[0], num_groups=num_groups)
-                # self.visualizer.show_histogram(groups=stpts_groups[0], title="train/histogram", num_groups=num_groups)
             return corr_loss
 
         if optimizer_idx == 1:
@@ -542,15 +490,6 @@ class CanonicalVQ(pl.LightningModule):
             self.log("train/pg_entropy_loss", pg_entropy, prog_bar=False, logger=True, on_step=True, on_epoch=True)
             self.log("train/pg_cd_loss", pg_cd, prog_bar=False, logger=True, on_step=True, on_epoch=True)
             self.log("train/groups", self.num_unique_groups, prog_bar=True, logger=True, on_step=True, on_epoch=False)
-            
-            if batch_idx % 20 == 0 and self.visualizer != None:
-                self.visualizer.show_pointclouds(points=corr_out['self_rec_shape'][0], title="train/global_reconstruct")
-                self.visualizer.show_sphere_groups(points=stpts_xyz_folded[0], title="train/stpts_xyz_folded", groups=torch.tensor(np.arange(num_groups)), num_groups=num_groups)
-                self.visualizer.show_sphere_groups(points=stpts_xyz[0], title="train/stpts_xyz", groups=torch.tensor(np.arange(num_groups)), num_groups=num_groups)
-                self.visualizer.show_sphere_groups(points=shape[0], title="train/grouped_shape", groups=stpts_groups[0], num_groups=num_groups)
-                self.visualizer.show_sphere_groups(points=corr_out['unfold_pts'][0], title="train/grouped_sphere", groups=stpts_groups[0], num_groups=num_groups)
-                self.visualizer.show_histogram(groups=stpts_groups[0], title="train/histogram", num_groups=num_groups)
-                self.visualizer.show_heatmap(stpts_prob_map[0], title="train/heat")
                 
             return pg_loss
 
@@ -560,8 +499,6 @@ class CanonicalVQ(pl.LightningModule):
             self.Unfold.eval()
             self.Fold.eval()
             self.PG.eval()
-            # self.VQ.eval()
-            # import pdb; pdb.set_trace
 
             # with torch.no_grad():
             corr_out = self.forward_correspondence(shape)
@@ -570,42 +507,21 @@ class CanonicalVQ(pl.LightningModule):
             stpts_prob_map, stpts_xyz, stpts_groups, _, scattered_features, stpts_xyz_folded = self.PG(corr_out['batch_p_2d_in_shape_order'].detach(), 
                                                                                                         shape, 
                                                                                                         corr_out['l_latent'])
-            # stpts_prob_map, stpts_xyz, stpts_groups, weighted_features, scattered_features, stpts_xyz_folded = self.PG(batch_p_2d_in_shape_order, shape, l_latent)
-            # pg_cd = CD_loss(stpts_xyz_folded, shape)
         
             # -------- PG -----------
             _, _, _, grouped_features, _, _ = self.PG(corr_out['batch_p_2d'], shape, corr_out['l_latent_in_standard_order'])
-            # _, _, _, _, scattered_features, _ = self.PG(batch_p_2d, shape, l_latent_in_standard_order)
-            # scattered_features = corr_out['g_latent_stacked']
 
             # -------- VQ -----------
-            # scattered_features_quant_conv = self.quant_conv(scattered_features.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
-            # grouped_features = self.quant_conv(grouped_features.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
-            # grouped_quant, emb_loss, info = self.VQ(grouped_features)
             grouped_quant, indices, emb_loss = self.VQ(grouped_features)
-            # import pdb; pdb.set_trace()
 
             per_sample_codebook_usage = sum([indices[i].unique().size(0) for i in range(batch_size)])/batch_size
             per_batch_codebook_usage = indices.unique().size(0)
 
-            # grouped_quant = self.post_quant_conv(grouped_quant.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
-
             quant = self.PG.remap_grouped_features(corr_out['batch_p_2d'], grouped_quant)
-            # import pdb; pdb.set_trace()
-            # quant = self.PG.remap_grouped_features(corr_out['batch_p_2d'], grouped_features)
-
-            # quant = scattered_features_quant_conv
-            # emb_loss = torch.tensor(0).to(quant)
-            # Fold_f_input = self.post_quant_conv(quant.transpose(1, 2).contiguous()).transpose(1, 2).contiguous()
 
             # -------- Fold_f -----------
-            # Fold_f_input =  batched_index_select(Fold_f_input, 1, standard_order.long()) # l_latent # scattered_features_quant_conv
-            # Fold_f_input = corr_out['g_latent_stacked']
-            # Fold_f_input = scattered_features
             Fold_f_input = quant
             self_rec_shape_f_ = self.Fold_f(Fold_f_input, corr_out['batch_p_2d']) 
-            # import pdb; pdb.set_trace()
-            # self_rec_shape_f_ = self.Fold_f(Fold_f_input, batch_p_2d_in_shape_order) 
 
             self_rec_shape_f_ = self.Fold_f(Fold_f_input, corr_out['batch_p_2d'])
 
@@ -618,39 +534,10 @@ class CanonicalVQ(pl.LightningModule):
                                                    self_rec_shape_f_, 
                                                    optimizer_idx, self.global_step)
 
-            # self_rec_shape_f_a = self.Fold_f(Fold_f_input, corr_out['batch_p_2d']*1.5)
-            # self_rec_shape_f_b = self.Fold_f(Fold_f_input, corr_out['batch_p_2d']*0.5)
-            # self_rec_shape_f_c = self.Fold_f(Fold_f_input, corr_out['batch_p_2d']*0.1)
-            # self_rec_shape_f_d = self.Fold_f(Fold_f_input, corr_out['batch_p_2d']*4)
-            # loss_sr_f_a = (CD_loss(self_rec_shape_f_a/1.5, shape) + EMD_loss(self_rec_shape_f_a/1.5, shape))
-            # loss_sr_f_b = (CD_loss(self_rec_shape_f_b/0.5, shape) + EMD_loss(self_rec_shape_f_b/0.5, shape))
-            # loss_sr_f_c = (CD_loss(self_rec_shape_f_c/0.1, shape) + EMD_loss(self_rec_shape_f_c/0.1, shape))
-            # loss_sr_f_d = (CD_loss(self_rec_shape_f_d/4, shape) + EMD_loss(self_rec_shape_f_d/4, shape))*0.1
-            aeloss = aeloss # + loss_sr_f_b + loss_sr_f_c # + loss_sr_f_d + loss_sr_f_a 
-            # self.log("train/loss_sr_f_a", loss_sr_f_a, prog_bar=False, logger=True, on_step=False, on_epoch=True)
-            # self.log("train/loss_sr_f_b", loss_sr_f_b, prog_bar=False, logger=True, on_step=False, on_epoch=True)
-            # self.log("train/loss_sr_f_c", loss_sr_f_c, prog_bar=False, logger=True, on_step=False, on_epoch=True)
-            # self.log("train/loss_sr_f_d", loss_sr_f_d, prog_bar=False, logger=True, on_step=False, on_epoch=True)
-
             self.log("train/aeloss", aeloss, prog_bar=False, logger=True, on_step=True, on_epoch=True) 
             self.log("train/per_sample_codebook_usage", per_sample_codebook_usage, prog_bar=False, logger=True, on_step=False, on_epoch=True)
             self.log("train/per_batch_codebook_usage", per_batch_codebook_usage, prog_bar=False, logger=True, on_step=False, on_epoch=True)  
             self.log_dict(log_dict_ae, prog_bar=False, logger=True, on_step=True, on_epoch=True)
-            # self.log("train/pg_cd_san", pg_cd, prog_bar=False, logger=True, on_step=True, on_epoch=True)
-
-            if batch_idx % 20 == 0 and self.visualizer != None:
-                self.visualizer.show_pointclouds(points=shape[0], title="train/input")
-                self.visualizer.show_pointclouds(points=corr_out['self_rec_shape'][0], title="train/global_reconstruct")
-                # self.visualizer.show_pointclouds(points=self_rec_shape_u[0], title="train/global_reconstruct_u")
-                # self.visualizer.show_pointclouds(points=unfold_pts[0], title="train/global_unfold")
-                # self.visualizer.show_pointclouds(points=batch_p_2d[0], title="train/unfold_target")
-                self.visualizer.show_pointclouds(points=self_rec_shape_f_[0], title="train/self_rec_shape_f_")
-
-                self.visualizer.show_sphere_groups(points=stpts_xyz_folded[0], title="train/stpts_xyz_folded", groups=torch.tensor(np.arange(num_groups)), num_groups=num_groups)
-                self.visualizer.show_sphere_groups(points=stpts_xyz[0], title="train/stpts_xyz", groups=torch.tensor(np.arange(num_groups)), num_groups=num_groups)
-                self.visualizer.show_sphere_groups(points=shape[0], title="train/grouped_shape", groups=stpts_groups[0], num_groups=num_groups)
-                self.visualizer.show_sphere_groups(points=corr_out['unfold_pts'][0], title="train/grouped_sphere", groups=stpts_groups[0], num_groups=num_groups)
-                self.visualizer.show_histogram(groups=stpts_groups[0], title="train/histogram", num_groups=num_groups)
             
             return aeloss
 
@@ -721,30 +608,8 @@ class CanonicalVQ(pl.LightningModule):
         return quant_c, indices
 
 
-
     def test_step(self, batch, batch_idx):
         rt = self(batch, denorm=True)
-
-        if batch_idx % 20 == 0 and self.visualizer != None:
-            self.visualizer.show_sphere_groups(points=rt['info']['stpts_xyz_folded'][0], title="test/stpts_xyz_folded", groups=torch.tensor(np.arange(self.num_groups)), num_groups=self.num_groups)
-            self.visualizer.show_sphere_groups(points=rt['info']['stpts_xyz'][0], title="test/stpts_xyz", groups=torch.tensor(np.arange(self.num_groups)), num_groups=self.num_groups)
-            self.visualizer.show_sphere_groups(points=rt['global_rec_shape'][0], title="test/grouped_shape", groups=rt['info']['stpts_groups'][0], num_groups=self.num_groups)
-            self.visualizer.show_sphere_groups(points=rt['info']['unfold_pts'][0], title="test/grouped_sphere", groups=rt['info']['stpts_groups'][0], num_groups=self.num_groups)
-            self.visualizer.show_histogram(groups=rt['info']['stpts_groups'][0], title="test/histogram", num_groups=self.num_groups)
-            
-            if self.mode == 3:
-                if self.condition == None:
-                    for b in range(10):
-                        gen_shape = rt['gen_our_shape'][b]
-                        stpts_groups = rt['gen']['stpts_groups'][b]
-                        self.visualizer.show_sphere_groups(points=gen_shape, title="eval_gen_pts_{:02d}".format(b), groups=stpts_groups, num_groups=self.num_groups)
-                elif self.condition == 'mask':
-                    for b in range(3):
-                        for v in range(5):
-                            stpts_groups = rt['gen']['stpts_groups'][b]
-                            self.visualizer.vis.image(rt['gen']['completion_image'][b][v], win="eval_img_{:02d}_{:02d}".format(b, v), opts=dict(title="eval_img_{:02d}_{:02d}".format(b, v)))
-                            self.visualizer.show_sphere_groups(points=torch.tensor(rt['completion_gen_shape'][b][v]), title="eval_gen_pts_{:02d}_{:02d}".format(b,v), groups=stpts_groups, num_groups=self.num_groups)
-
         return rt
 
     def test_epoch_end(self, validation_step_outputs):
@@ -786,8 +651,6 @@ class CanonicalVQ(pl.LightningModule):
         results = {}
         all_ref = torch.cat(all_ref, 0)
         all_rec = torch.cat(all_rec, 0)
-        # print("Reconstruction Evaluation start")
-        # print(f"Reconstruction Sample size:{all_rec.size()} Ref size: {all_ref.size()}")
 
         emd_cd_rt = emd_cd(all_rec, all_ref, 128, accelerated_cd=True)
         emd_cd_rt = {
@@ -796,15 +659,11 @@ class CanonicalVQ(pl.LightningModule):
         
         self.log("test/CD", emd_cd_rt["test/CD"], prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True)
         self.log("test/EMD", emd_cd_rt["test/EMD"], prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True)
-        print(emd_cd_rt)
-        # results.update(emd_cd_rt)
 
         for k in others.keys():
             if "gen" in k or "completion" in k:
                 continue
             all_other = torch.cat(others[k], 0)
-            # print("Reconstruction Evaluation (", k,") start")
-            # print(f"Reconstruction Other. Sample size:{all_other.size()} Ref size: {all_ref.size()}")
             emd_cd_rt = emd_cd(all_other, all_ref, 128, accelerated_cd=True)
             emd_cd_rt = {
                 'test/'+k+'_'+j: (v.cpu().detach().item() if not isinstance(v, float) else v)
@@ -815,28 +674,14 @@ class CanonicalVQ(pl.LightningModule):
         np.save(os.path.join(self.logger.save_dir, str(self.current_epoch)+'_rec.npy'), all_rec.cpu().numpy())
         np.save(os.path.join(self.logger.save_dir, 'gdt_origin_scale.npy'), all_ref.cpu().numpy())
         np.save(os.path.join(self.logger.save_dir, 'per_set_codebook_usage.npy'), per_set_codebook_usage)
-        # np.save(os.path.join(self.logger.save_dir, str(self.current_epoch)+'_rec.npy'), all_rec.cpu().numpy())
-        # self.log("val/CD", results["val/CD"], prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True)
-        # self.log("val/EMD", results["val/CD"], prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True)
 
         if self.mode == 3:
             # import pdb; pdb.set_trace()
             if self.condition == 'mask':
-                # all_completion_ref_shape = torch.tensor(np.concatenate(others["completion_ref_shape"])).cuda().view(-1, 2048, 3)
-                # all_completion_gen_shape = torch.tensor(np.concatenate(others["completion_gen_shape"])).cuda()
                 all_completion_ref_shape = np.concatenate(others["completion_ref_shape"])
                 all_completion_gen_shape = np.concatenate(others["completion_gen_shape"])
                 all_completion_gen_shape_norm = np.concatenate(others["completion_gen_shape_norm"])
 
-                # emd_cd_rt = emd_cd(all_completion_gen_shape, all_completion_ref_shape, 128, accelerated_cd=True)
-                # emd_cd_rt = {
-                #     'test/completion_'+k+'_'+j: (v.cpu().detach().item() if not isinstance(v, float) else v)
-                #     for j, v in emd_cd_rt.items()}
-                
-                # results.update(emd_cd_rt)
-
-                # import pdb; pdb.set_trace()
-                # all_images = np.concatenate(img_list[:100])
                 np.save(os.path.join(self.logger.save_dir, 'all_completion_ref_shape.npy'), all_completion_ref_shape)
                 np.save(os.path.join(self.logger.save_dir, 'all_completion_gen_shape.npy'), all_completion_gen_shape)
                 np.save(os.path.join(self.logger.save_dir, 'all_completion_gen_shape_norm.npy'), all_completion_gen_shape_norm)
@@ -849,16 +694,11 @@ class CanonicalVQ(pl.LightningModule):
                 np.save(os.path.join(self.logger.save_dir, str(self.current_epoch)+'_gen.npy'), all_gen_normalized.cpu().numpy())
                 np.save(os.path.join(self.logger.save_dir, 'gdt_normed_scale.npy'), all_ref_normalized.cpu().numpy())
 
-                # print("Generation Evaluation start")
-                # print(f"Generation Sample size:{all_gen_normalized.size()} Ref size: {all_ref_normalized.size()}")
                 gen_results = compute_all_metrics(all_gen_normalized, all_ref_normalized, 256, accelerated_cd=True, compute_nna=True, compute_jsd=True)
                 gen_results = {'test/'+k: (v.cpu().detach().item() if not isinstance(v, float) else v) for k, v in gen_results.items()}
                 print(gen_results)
-                # jsd = JSD(all_gen_normalized.cpu().detach().numpy(), all_ref_normalized.cpu().detach().numpy())
-                # gen_results.update({'test/JSD': jsd})
-                results.update(gen_results)
 
-                # import pdb; pdb.set_trace()
+                results.update(gen_results)
 
         self.log_dict(results, prog_bar=False, logger=True, on_step=False, on_epoch=True)
 
@@ -870,29 +710,6 @@ class CanonicalVQ(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         rt = self(batch, denorm=True)
-
-        if batch_idx % 20 == 0 and self.visualizer != None:
-            self.visualizer.show_sphere_groups(points=rt['info']['stpts_xyz_folded'][0], title="val/stpts_xyz_folded", groups=torch.tensor(np.arange(self.num_groups)), num_groups=self.num_groups)
-            self.visualizer.show_sphere_groups(points=rt['info']['stpts_xyz'][0], title="val/stpts_xyz", groups=torch.tensor(np.arange(self.num_groups)), num_groups=self.num_groups)
-            self.visualizer.show_sphere_groups(points=rt['oracle_shape'][0], title="val/grouped_shape", groups=rt['info']['stpts_groups'][0], num_groups=self.num_groups)
-            self.visualizer.show_sphere_groups(points=rt['info']['unfold_pts'][0], title="val/grouped_sphere", groups=rt['info']['stpts_groups'][0], num_groups=self.num_groups)
-            self.visualizer.show_histogram(groups=rt['info']['stpts_groups'][0], title="val/histogram", num_groups=self.num_groups)
-            
-            self.visualizer.show_pointclouds(points=rt['global_rec_shape'][0], title="val/global_rec")
-            self.visualizer.show_pointclouds(points=rt['rec_shape'][0], title="val/local_rec")
-
-            if self.mode == 3:
-                if self.condition == None:
-                    for b in range(10):
-                        gen_shape = rt['gen_our_shape'][b]
-                        stpts_groups = rt['gen']['stpts_groups'][b]
-                        self.visualizer.show_sphere_groups(points=gen_shape, title="eval_gen_pts_{:02d}".format(b), groups=stpts_groups, num_groups=self.num_groups)
-                elif self.condition == 'mask':
-                    for b in range(10):
-                        for v in range(1):
-                            stpts_groups = rt['gen']['stpts_groups'][b]
-                            self.visualizer.vis.image(rt['gen']['completion_image'][b][v], win="eval_img_{:02d}_{:02d}".format(b, v), opts=dict(title="eval_img_{:02d}_{:02d}".format(b, v)))
-                            self.visualizer.show_sphere_groups(points=torch.tensor(rt['completion_gen_shape'][b][v]), title="eval_gen_pts_{:02d}_{:02d}".format(b,v), groups=stpts_groups, num_groups=self.num_groups)
 
         return rt
 
@@ -924,9 +741,6 @@ class CanonicalVQ(pl.LightningModule):
                     if self.condition == 'mask':
                         img_list.append(validation_step_output[k]['completion_image'])
 
-        # per_set_codebook_usage = torch.concat(vq_indices).flatten().unique()
-        # self.log("val/per_set_codebook_usage", per_set_codebook_usage, prog_bar=False, logger=True, on_step=False, on_epoch=True, sync_dist=True)
-
         per_set_codebook_usage = []
         codebook_list = torch.concat(vq_indices)
         for g_id in range(self.num_groups):
@@ -937,8 +751,6 @@ class CanonicalVQ(pl.LightningModule):
         results = {}
         all_ref = torch.cat(all_ref, 0)
         all_rec = torch.cat(all_rec, 0)
-        # print("Reconstruction Evaluation start")
-        # print(f"Reconstruction Sample size:{all_rec.size()} Ref size: {all_ref.size()}")
 
         emd_cd_rt = emd_cd(all_rec, all_ref, 128, accelerated_cd=True)
         emd_cd_rt = {
@@ -954,18 +766,13 @@ class CanonicalVQ(pl.LightningModule):
             if "gen" in k or "completion" in k:
                 continue
             all_other = torch.cat(others[k], 0)
-            # print("Reconstruction Evaluation (", k,") start")
-            # print(f"Reconstruction Other. Sample size:{all_other.size()} Ref size: {all_ref.size()}")
+
             emd_cd_rt = emd_cd(all_other, all_ref, 128, accelerated_cd=True)
             emd_cd_rt = {
                 'val/'+k+'_'+j: (v.cpu().detach().item() if not isinstance(v, float) else v)
                 for j, v in emd_cd_rt.items()}
             
             results.update(emd_cd_rt)
-            # import pdb; pdb.set_trace()
-        # np.save(os.path.join(self.logger.save_dir, str(self.current_epoch)+'_rec.npy'), all_rec.cpu().numpy())
-        # self.log("val/CD", results["val/CD"], prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True)
-        # self.log("val/EMD", results["val/CD"], prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True)
 
         if self.mode == 3:
 
@@ -985,14 +792,11 @@ class CanonicalVQ(pl.LightningModule):
 
                 all_ref_normalized = torch.cat(others["gen_ref_shape"], 0)
                 all_gen_normalized = torch.cat(others["gen_our_shape"], 0)
-                # print("Generation Evaluation start")
-                # print(f"Generation Sample size:{all_gen_normalized.size()} Ref size: {all_ref_normalized.size()}")
+
                 gen_results = compute_all_metrics(all_gen_normalized, all_ref_normalized, 256, accelerated_cd=True)
                 gen_results = {'val/'+k: (v.cpu().detach().item() if not isinstance(v, float) else v) for k, v in gen_results.items()}
                 # print(gen_results)
                 results.update(gen_results)
-                # np.save(os.path.join(self.logger.save_dir, str(self.current_epoch)+'_gen.npy'), all_gen_normalized.cpu().numpy())
-                # np.save(os.path.join(self.logger.save_dir, str(self.current_epoch)+'_rec.npy'), all_rec.cpu().numpy())
 
         self.log_dict(results, prog_bar=False, logger=True, on_step=False, on_epoch=True)
 
@@ -1024,18 +828,12 @@ class CanonicalVQ(pl.LightningModule):
             opt_corr = torch.optim.Adam( # list(self.Fold_f.parameters())+
                                         list(self.Encoder.parameters())+
                                         list(self.Fold.parameters()),
-                                        # list(self.Unfold.parameters()),
-                                    #   list(self.VQ.parameters())+
-                                    #   list(self.quant_conv.parameters())+
-                                    #   list(self.post_quant_conv.parameters()),
                                         lr=5e-4) # 0.001
             corr_scheduler = optim.lr_scheduler.StepLR(opt_corr, step_size=200, gamma=0.1)
 
         opt_ft = torch.optim.Adam(list(self.Fold_f.parameters())+
                                 list(self.Encoder_f.parameters())+
                                 list(self.VQ.parameters()),
-                                #   list(self.quant_conv.parameters()),
-                                #   list(self.post_quant_conv.parameters()),
                                 lr=5e-4) # 5e-4 4.5e-6
         
         ft_scheduler = optim.lr_scheduler.StepLR(opt_ft, step_size=1500, gamma=0.1) # 1500
@@ -1052,8 +850,6 @@ class CanonicalVQ(pl.LightningModule):
             return [opt_pg], [pg_sched]
         if self.mode == 2:
             return [opt_ft], [ft_scheduler]
-        # if self.mode == 1:
-        #     return [opt_ae, opt_pg], []
         if self.mode == 3:
             # separate out all parameters to those that will and won't experience regularizing weight decay
             decay = set()
@@ -1073,23 +869,6 @@ class CanonicalVQ(pl.LightningModule):
                     elif pn.endswith('weight') and isinstance(m, blacklist_weight_modules):
                         # weights of blacklist modules will NOT be weight decayed
                         no_decay.add(fpn)
-
-            # if self.condition == 'mask':
-            #     for mn, m in self.cond_feature_projection.named_modules():
-            #         for pn, p in m.named_parameters():
-            #             fpn = '%s.%s' % (mn, pn) if mn else pn # full param name
-
-            #             if pn.endswith('bias'):
-            #                 # all biases will not be decayed
-            #                 no_decay.add(fpn)
-            #             elif pn.endswith('weight') and isinstance(m, whitelist_weight_modules):
-            #                 # weights of whitelist modules will be weight decayed
-            #                 decay.add(fpn)
-            #             elif pn.endswith('weight') and isinstance(m, blacklist_weight_modules):
-            #                 # weights of blacklist modules will NOT be weight decayed
-            #                 no_decay.add(fpn)
-
-            # special case the position embedding parameter in the root GPT module as not decayed
             no_decay.add('pos_emb')
 
             # validate that we considered every parameter
@@ -1101,7 +880,6 @@ class CanonicalVQ(pl.LightningModule):
                                                         % (str(param_dict.keys() - union_params), )
 
             # create the pytorch optimizer object
-
             if self.condition == 'mask':
                 optim_groups = [
                     {"params": [param_dict[pn] for pn in sorted(list(decay))], "weight_decay": 0.01},
@@ -1117,9 +895,6 @@ class CanonicalVQ(pl.LightningModule):
             print("using opt_tf")
             tf_scheduler = optim.lr_scheduler.StepLR(opt_tf, step_size=1000, gamma=0.1)
             return [opt_tf], [tf_scheduler]
-        # else:
-        #     return [opt_ae], []
-        # return [opt_ae, opt_pg], []
 
 class LRPolicy(object):
     def __init__(self, rate=0.7):

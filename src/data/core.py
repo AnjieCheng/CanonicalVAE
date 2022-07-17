@@ -12,7 +12,6 @@ from torch.utils import data
 
 logger = logging.getLogger(__name__)
 
-
 # taken from https://github.com/optas/latent_3d_points/blob/8e8f29f8124ed5fc59439e8551ba7ef7567c9a37/src/in_out.py
 synsetid_to_cate = {
     '02691156': 'airplane', '02773838': 'bag', '02801938': 'basket',
@@ -164,16 +163,8 @@ class Uniform15KPC(data.Dataset):
             te_idxs = np.arange(self.te_sample_size)
         te_out = torch.from_numpy(te_out[te_idxs, :]).float()
 
-        # ### test upper-bound ###
-        # tr_out_random = self.train_points[idx]
-        # tr_idxs_random = np.random.choice(tr_out_random.shape[0], self.tr_sample_size)
-        # tr_out_random = torch.from_numpy(tr_out_random[tr_idxs_random, :]).float()
-
         tr_ofs = tr_out.mean(0, keepdim=True)
         te_ofs = te_out.mean(0, keepdim=True)
-
-        # m, s = self.get_pc_stats(idx)
-        # m, s = torch.from_numpy(np.asarray(m)), torch.from_numpy(np.asarray(s))
 
         shift, scale = self.get_standardize_stats(idx)
         shift, scale = torch.from_numpy(np.asarray(shift)), torch.from_numpy(np.asarray(scale))
@@ -189,7 +180,6 @@ class Uniform15KPC(data.Dataset):
             'label': cate_idx,
             'sid': sid, 'mid': mid,
             'shift': shift, 'scale': scale,
-            # 'pointcloud_random': tr_out_random,
         }
 
 class ShapeNet15kPointClouds(Uniform15KPC):
