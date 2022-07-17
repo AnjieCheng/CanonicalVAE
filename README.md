@@ -1,5 +1,5 @@
 # Autoregressive 3D Shape Generation via Canonical Mapping
-[[arxiv]](https://arxiv.org/abs/2204.01955) [[website(TBD)]](https://arxiv.org/abs/2204.01955)
+[[arxiv]](https://arxiv.org/abs/2204.01955)
 
 
 <p float="middle">
