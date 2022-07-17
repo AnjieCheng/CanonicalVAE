@@ -11,11 +11,9 @@ from external.metrics.StructuralLosses.match_cost import match_cost
 from external.metrics.StructuralLosses.nn_distance import nn_distance
 from .utils import unmask
 
-
 # Batched CD/EMD (GPU)
 def cd_cuda(sample, ref):
     return nn_distance(sample, ref)
-
 
 def emd_approx_cuda(sample, ref):
     B, N, C = sample.shape
@@ -147,7 +145,6 @@ def lgan_mmd_cov(all_dist):
         'lgan_cov': cov,
         'lgan_mmd_smp': mmd_smp,
     }
-
 
 # ALL
 def compute_all_metrics(sample_pcs, ref_pcs, batch_size=32, accelerated_cd=True, compute_nna=False, compute_jsd=False):

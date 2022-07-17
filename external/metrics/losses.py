@@ -2,7 +2,6 @@ import torch
 
 from .utils import unmask
 
-
 def _chamfer_loss_v1(output_set, output_mask, target_set, target_mask):
     sizes = (~output_mask).long().sum(dim=1).tolist()
     out = output_set.flatten(0, 1)  # [B * N, C]

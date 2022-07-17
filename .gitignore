@@ -3,6 +3,8 @@ logs/*
 data/*
 lightning_logs/*
 
+
+
 *.rar
 *.h5
 *.zip

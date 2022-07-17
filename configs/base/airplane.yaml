@@ -5,7 +5,7 @@ model:
     feat_dim: 256
     n_embed: 5000
     num_groups: 64
-    mode: 0 # corr
+    mode: 0
     train_unfold: False
     no_fold: False
 
