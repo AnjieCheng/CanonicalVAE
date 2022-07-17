@@ -21,9 +21,9 @@
 
 Code release **WIP**:
 - [x] Training/inference code
-- [ ] Installation and running instructions
+- [x] Installation and running instructions
 - [x] Pre-trained checkpoints & generated samples
-- [ ] Evaluation using Jupyter notebook
+- [x] Evaluation using Jupyter notebook
 - [ ] Cleanup
 
 ## Requirements
