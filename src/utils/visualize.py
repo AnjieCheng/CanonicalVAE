@@ -16,7 +16,7 @@ import seaborn as sns
 from collections import defaultdict
 import seaborn as sns
 import trimesh
-from src.utils.render_mitsuba2_pc import *
+# from src.utils.render_mitsuba2_pc import *
 
 def tsboard_log_scalar(logger, scalars, it, prefrix='train'):
     for k, v in scalars.items():
