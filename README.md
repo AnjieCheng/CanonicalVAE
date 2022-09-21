@@ -41,6 +41,13 @@ python setup.py install
 ```
 The installed `build` folder should be under `external/emd`.
 
+To install [StructuralLoss](https://github.com/stevenygd/PointFlow) for evaluation, please follow the instruction below.
+```setup
+cd external/metrics/pytorch_structural_losses/
+make clean
+make
+```
+
 ## Dataset
 We use the processed version of ShapeNet provided [PointFlow](https://github.com/stevenygd/PointFlow). Please download the dataset [here](https://drive.google.com/drive/folders/1G0rf-6HSHoTll6aH7voh-dXj6hCRhSAQ?usp=sharing).
 Don't forget to change the `root` path in `src/data/core.py` to your dataset location.
